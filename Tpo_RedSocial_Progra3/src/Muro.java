@@ -27,7 +27,7 @@ public class Muro {
         publicaciones.add(p);
     }
 
-    public Publicacion [] constultarPorFecha(){
+    public Publicacion [] consultarPorFecha(){
         return ordenadas(POR_FECHA);
     }
 

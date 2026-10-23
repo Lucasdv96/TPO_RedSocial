@@ -13,14 +13,14 @@ public class Main {
         muro.agregar(new Publicacion(5, "Caro",  base.plusHours(2),  7, 5));
 
         System.out.println("=== Por fecha (más reciente primero) ===");
-        mostrar(muro.constultarPorFecha());
+        mostrar(muro.consultarPorFecha());
 
         System.out.println("\n=== Por relevancia (más relevante primero) ===");
         mostrar(muro.consultarPorRelevancia());
 
         // Casos borde
         System.out.println("\n=== Muro vacío ===");
-        mostrar(new Muro().constultarPorFecha());
+        mostrar(new Muro().consultarPorFecha());
 
         Muro unico = new Muro();
         unico.agregar(new Publicacion(9, "Solo", base, 0, 0));

@@ -13,8 +13,9 @@ public class MergeSort {
         ordenar(array, aux, 0, array.length -1, comp);
     }
 
-    public static <T> void ordenar(T[] array,T[] aux, int izq, int der,Comparator<T> comp ){
-        if(izq < der){
+    // DIVIDIR: partimos el rango en dos mitades y ordenamos cada una recursivamente.
+    private static <T> void ordenar(T[] array,T[] aux, int izq, int der,Comparator<T> comp ){
+        if(izq >= der){
             return; // caso base: 0 o 1 elemento ya ordenado
         }
         int medio =izq + (der - izq)/2;
@@ -23,6 +24,7 @@ public class MergeSort {
         mezclar(array, aux, izq, medio, der, comp); //COMBINAR
     }
 
+    // COMBINAR: mezcla dos mitades ya ordenadas en una sola.
     private static <T> void mezclar(T[] array, T[] aux, int izq, int medio ,int der, Comparator<T> comp){
         for (int k = izq; k <= der; k++) {
             aux[k] = array[k];
