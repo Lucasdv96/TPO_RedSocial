@@ -1,13 +1,40 @@
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-void main() {
-    //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-    // to see how IntelliJ IDEA suggests fixing it.
-    IO.println(String.format("Hello and welcome!"));
+import java.time.LocalDateTime;
 
-    for (int i = 1; i <= 5; i++) {
-        //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-        // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-        IO.println("i = " + i);
+public class Main {
+
+    public static void main(String[] args) {
+        Muro muro = new Muro();
+        LocalDateTime base = LocalDateTime.of(2026, 10, 20, 12, 0);
+
+        muro.agregar(new Publicacion(1, "Ana",   base.plusHours(1), 10, 2));
+        muro.agregar(new Publicacion(2, "Luis",  base.plusHours(5),  3, 1));
+        muro.agregar(new Publicacion(3, "Sofi",  base.plusHours(3), 10, 2)); // misma relevancia que id 1
+        muro.agregar(new Publicacion(4, "Mati",  base.plusHours(3),  1, 0)); // misma fecha que id 3
+        muro.agregar(new Publicacion(5, "Caro",  base.plusHours(2),  7, 5));
+
+        System.out.println("=== Por fecha (más reciente primero) ===");
+        mostrar(muro.constultarPorFecha());
+
+        System.out.println("\n=== Por relevancia (más relevante primero) ===");
+        mostrar(muro.consultarPorRelevancia());
+
+        // Casos borde
+        System.out.println("\n=== Muro vacío ===");
+        mostrar(new Muro().constultarPorFecha());
+
+        Muro unico = new Muro();
+        unico.agregar(new Publicacion(9, "Solo", base, 0, 0));
+        System.out.println("\n=== Una sola publicación ===");
+        mostrar(unico.consultarPorRelevancia());
+    }
+
+    private static void mostrar(Publicacion[] arr) {
+        if (arr.length == 0) {
+            System.out.println("(sin publicaciones)");
+            return;
+        }
+        for (Publicacion p : arr) {
+            System.out.println(p);
+        }
     }
 }
