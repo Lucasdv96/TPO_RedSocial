@@ -31,7 +31,7 @@ public class Publicacion {
 
     @Override
     public String toString() {
-        return "modelo.Publicacion{id=" + id + ", autor=" + autor + ", fecha=" + fechaHora
+        return "Publicacion{id=" + id + ", autor=" + autor + ", fecha=" + fechaHora
                 + ", reacciones=" + reacciones + ", comentarios=" + comentarios
                 + ", relevancia=" + getRelevancia() + "}";
     }
