@@ -1,0 +1,4 @@
+.idea/
+out/
+*.class
+git rm -r --cached out .idea
