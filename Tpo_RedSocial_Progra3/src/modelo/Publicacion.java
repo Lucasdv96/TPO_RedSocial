@@ -1,3 +1,5 @@
+package modelo;
+
 import java.time.LocalDateTime;
 
 public class Publicacion {
@@ -29,7 +31,7 @@ public class Publicacion {
 
     @Override
     public String toString() {
-        return "Publicacion{id=" + id + ", autor=" + autor + ", fecha=" + fechaHora
+        return "modelo.Publicacion{id=" + id + ", autor=" + autor + ", fecha=" + fechaHora
                 + ", reacciones=" + reacciones + ", comentarios=" + comentarios
                 + ", relevancia=" + getRelevancia() + "}";
     }

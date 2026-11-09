@@ -1,6 +1,7 @@
-package Difusion;
+package algoritmos;
 
-import Grafo.Grafo;
+import Difusion.ResultadoDifusion;
+import estructuras.Grafo;
 import java.util.*;
 
 /**

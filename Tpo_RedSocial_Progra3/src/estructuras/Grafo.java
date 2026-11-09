@@ -1,4 +1,4 @@
-package Grafo;
+package estructuras;
 
 import java.util.*;
 
