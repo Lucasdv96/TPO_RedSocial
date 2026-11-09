@@ -1,4 +1,4 @@
-package Difusion;
+package modelo;
 
 import java.util.*;
 

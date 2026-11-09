@@ -1,3 +1,5 @@
+package algoritmos;
+
 import java.util.Comparator;
 /**
  * Ordenamiento por mezcla (Divide y Conquista), implementado desde cero.
