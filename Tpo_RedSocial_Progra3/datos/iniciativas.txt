@@ -1,0 +1,7 @@
+# Primera linea: presupuesto;N
+# Resto de las lineas: id;costo;impacto
+presupuesto;8
+Hackaton;1;10
+Biblioteca;4;3
+Tutorias;5;5
+Laboratorio;7;8
