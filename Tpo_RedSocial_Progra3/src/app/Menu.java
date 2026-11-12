@@ -4,7 +4,9 @@ import algoritmos.CadenaDifusion;
 import algoritmos.CadenasAlternativas;
 import algoritmos.FormacionEquipos;
 import algoritmos.MochilaIniciativas;
+import algoritmos.SeleccionActividades;
 import estructuras.Grafo;
+import modelo.Actividad;
 import modelo.Estudiante;
 import modelo.Iniciativa;
 import modelo.Publicacion;
@@ -26,6 +28,8 @@ public class Menu {
     private static final String RUTA_PUBLICACIONES = "datos/publicaciones.txt";
     private static final String RUTA_RED = "datos/red.txt";
     private static final String RUTA_INICIATIVAS = "datos/iniciativas.txt";
+    private static final String RUTA_ACTIVIDADES = "datos/actividades.txt";
+    private static final int MAX_ACTIVIDADES_TABLA = 30;
     private static final int MAX_PRESUPUESTO_MATRIZ = 20;
 
     private final Scanner entrada;
@@ -42,6 +46,8 @@ public class Menu {
                 System.out.println("1. Muro de publicaciones (Merge Sort)");
                 System.out.println("2. Cadena de difusion mas rapida (Dijkstra)");
                 System.out.println("3. Seleccion de iniciativas a financiar (Mochila)");
+                System.out.println("4. Seleccion de actividades compatibles (Programacion Dinamica)");
+                System.out.println("5. Ejecutar casos de prueba predefinidos");
                 System.out.println("4. Ejecutar casos de prueba predefinidos");
                 System.out.println("5. Cadenas alternativas de difusion (Backtracking)");
                 System.out.println("6. Formacion de equipos con restricciones (Backtracking)");
@@ -52,6 +58,8 @@ public class Menu {
                     case 1: opcionMuro(); break;
                     case 2: opcionDifusion(); break;
                     case 3: opcionIniciativas(); break;
+                    case 4: opcionActividades(); break;
+                    case 5: CasosDePrueba.ejecutarTodos(); break;
                     case 4: CasosDePrueba.ejecutarTodos(); break;
                     case 5: opcionCadenasAlternativas(); break;
                     case 6: opcionEquipos(); break;
@@ -201,6 +209,32 @@ public class Menu {
         mochila.mostrarResultado();
     }
 
+    // ---------- A3: actividades compatibles ----------
+
+    private void opcionActividades() {
+        List<Actividad> actividades;
+        if (usarArchivo()) {
+            try {
+                actividades = LectorArchivos.leerActividades(leerRuta(RUTA_ACTIVIDADES));
+            } catch (IOException | IllegalArgumentException e) {
+                System.out.println("No se pudo cargar el archivo: " + e.getMessage());
+                return;
+            }
+        } else {
+            actividades = CasosDePrueba.actividadesEjemplo();
+        }
+
+        SeleccionActividades seleccion = new SeleccionActividades(actividades);
+        seleccion.resolver();
+        System.out.println();
+        if (actividades.size() <= MAX_ACTIVIDADES_TABLA) {
+            System.out.println("Tabla de programacion dinamica (ordenada por hora de fin):");
+            seleccion.mostrarTabla();
+            System.out.println();
+        } else {
+            System.out.println("(La tabla no se muestra porque hay mas de " + MAX_ACTIVIDADES_TABLA + " actividades)");
+        }
+        seleccion.mostrarResultado();
     // ---------- B1: formacion de equipos ----------
 
     private void opcionEquipos() {

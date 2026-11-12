@@ -4,20 +4,23 @@ import algoritmos.CadenaDifusion;
 import algoritmos.CadenasAlternativas;
 import algoritmos.FormacionEquipos;
 import algoritmos.MochilaIniciativas;
+import algoritmos.SeleccionActividades;
 import estructuras.Grafo;
+import modelo.Actividad;
 import modelo.Estudiante;
 import modelo.Iniciativa;
 import modelo.Publicacion;
 import servicios.Muro;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/** Datos de ejemplo y casos de prueba predefinidos de las tres funcionalidades. */
+/** Datos de ejemplo y casos de prueba predefinidos de las funcionalidades. */
 public class CasosDePrueba {
 
     public static final int PRESUPUESTO_EJEMPLO = 8;
@@ -68,6 +71,28 @@ public class CasosDePrueba {
         return iniciativas;
     }
 
+    /*
+     * Actividades de ejemplo. Greedy (terminar lo antes posible) elegiria B, C y D (interes 10);
+     * la mejor opcion es A y D (interes 14), y D empieza justo cuando termina A.
+     *
+     *   A  08-12  interes 10
+     *   B  08-10  interes 3
+     *   C  10-12  interes 3
+     *   E  11-13  interes 6
+     *   D  12-14  interes 4
+     */
+    public static List<Actividad> actividadesEjemplo() {
+        List<Actividad> lista = new ArrayList<>();
+        lista.add(act("A", 8, 12, 10));
+        lista.add(act("B", 8, 10, 3));
+        lista.add(act("C", 10, 12, 3));
+        lista.add(act("D", 12, 14, 4));
+        lista.add(act("E", 11, 13, 6));
+        return lista;
+    }
+
+    private static Actividad act(String id, int horaInicio, int horaFin, int interes) {
+        return new Actividad(id, LocalTime.of(horaInicio, 0), LocalTime.of(horaFin, 0), interes);
     public static final int TAMANIO_EQUIPO_EJEMPLO = 3;
 
     public static List<Estudiante> estudiantesEjemplo() {
@@ -101,6 +126,7 @@ public class CasosDePrueba {
         probarMuro();
         probarDifusion();
         probarMochila();
+        probarActividades();
         probarCadenasAlternativas();
         probarEquipos();
     }
@@ -184,6 +210,58 @@ public class CasosDePrueba {
         probar("Presupuesto cero (esperado: ninguna, impacto 0)", sinPlata, 0);
 
         probar("Sin iniciativas (esperado: ninguna, impacto 0)", new ArrayList<>(), 50);
+    }
+
+    public static void probarActividades() {
+        titulo("A3 - Seleccion de actividades compatibles (Programacion Dinamica)");
+
+        SeleccionActividades ejemplo = new SeleccionActividades(actividadesEjemplo());
+        ejemplo.resolver();
+        System.out.println("\nTabla de programacion dinamica (esperado: A y D, interes 14):");
+        ejemplo.mostrarTabla();
+        System.out.println();
+        ejemplo.mostrarResultado();
+
+        List<Actividad> greedyFalla = new ArrayList<>();
+        greedyFalla.add(act("Larga", 1, 10, 100));
+        greedyFalla.add(act("C1", 1, 3, 10));
+        greedyFalla.add(act("C2", 3, 6, 10));
+        greedyFalla.add(act("C3", 6, 10, 10));
+        probarActividades("Greedy falla, PD acierta (esperado: Larga, interes 100)", greedyFalla);
+
+        List<Actividad> frontera = new ArrayList<>();
+        frontera.add(act("X", 8, 10, 5));
+        frontera.add(act("Y", 10, 12, 7));
+        probarActividades("Una empieza cuando termina la otra (esperado: X e Y, interes 12)", frontera);
+
+        List<Actividad> superpuestas = new ArrayList<>();
+        superpuestas.add(act("P", 8, 12, 4));
+        superpuestas.add(act("Q", 9, 11, 9));
+        superpuestas.add(act("R", 10, 13, 6));
+        probarActividades("Todas se superponen (esperado: solo Q, interes 9)", superpuestas);
+
+        List<Actividad> unica = new ArrayList<>();
+        unica.add(act("Sola", 9, 10, 4));
+        probarActividades("Una sola actividad (esperado: Sola, interes 4)", unica);
+
+        probarActividades("Sin actividades (esperado: ninguna, interes 0)", new ArrayList<>());
+
+        List<Actividad> interesCero = new ArrayList<>();
+        interesCero.add(act("Util", 8, 10, 5));
+        interesCero.add(act("Nula", 10, 12, 0));
+        probarActividades("Interes cero (esperado: solo Util, interes 5)", interesCero);
+
+        List<Actividad> empate = new ArrayList<>();
+        empate.add(act("N", 9, 11, 5));
+        empate.add(act("M", 8, 10, 5));
+        probarActividades("Empate de interes total (esperado: M, la que termina antes, interes 5)", empate);
+    }
+
+    private static void probarActividades(String titulo, List<Actividad> lista) {
+        System.out.println("\n--- " + titulo + " ---");
+        SeleccionActividades seleccion = new SeleccionActividades(lista);
+        seleccion.resolver();
+        seleccion.mostrarResultado();
     }
 
     private static void probar(String titulo, List<Iniciativa> lista, int presupuesto) {
