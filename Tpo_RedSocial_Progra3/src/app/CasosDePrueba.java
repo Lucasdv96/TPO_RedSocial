@@ -1,6 +1,7 @@
 package app;
 
 import algoritmos.CadenaDifusion;
+import algoritmos.CadenasAlternativas;
 import algoritmos.MochilaIniciativas;
 import estructuras.Grafo;
 import modelo.Iniciativa;
@@ -9,7 +10,9 @@ import servicios.Muro;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /** Datos de ejemplo y casos de prueba predefinidos de las tres funcionalidades. */
 public class CasosDePrueba {
@@ -68,6 +71,7 @@ public class CasosDePrueba {
         probarMuro();
         probarDifusion();
         probarMochila();
+        probarCadenasAlternativas();
     }
 
     public static void probarMuro() {
@@ -156,6 +160,75 @@ public class CasosDePrueba {
         MochilaIniciativas mochila = new MochilaIniciativas(lista, presupuesto);
         mochila.resolver();
         mochila.mostrarResultado();
+    }
+    public static void probarCadenasAlternativas() {
+        titulo("B3 - Cadenas alternativas de difusion (Backtracking)");
+        Grafo red = redEjemplo();
+
+        System.out.println("\n--- Caso 1: 1 a 6, max 15 min, hasta 3 intermediarios, sin excluidos ---");
+        System.out.println("    (esperado: 3 cadenas; mejores empatadas 1->2->5->6 y 1->3->4->6, 10 min)");
+        System.out.println(CadenasAlternativas.buscar(red, 1, 6, 15, 3, conjunto()));
+
+        System.out.println("--- Caso 2: igual que el caso 1, excluyendo al usuario 3 ---");
+        System.out.println("    (esperado: 2 cadenas; mejor 1->2->5->6, 10 min)");
+        System.out.println(CadenasAlternativas.buscar(red, 1, 6, 15, 3, conjunto(3)));
+
+        System.out.println("--- Caso 3: tiempo maximo exacto de 10 min (el limite es inclusivo) ---");
+        System.out.println("    (esperado: 2 cadenas de 10 min; se descarta la de 12)");
+        System.out.println(CadenasAlternativas.buscar(red, 1, 6, 10, 3, conjunto()));
+
+        System.out.println("--- Caso 4: tiempo maximo de 9 min (esperado: ninguna cadena) ---");
+        System.out.println(CadenasAlternativas.buscar(red, 1, 6, 9, 3, conjunto()));
+
+        System.out.println("--- Caso 5: 1 a 4 con 0 intermediarios (esperado: ninguna, no hay vinculo directo) ---");
+        System.out.println(CadenasAlternativas.buscar(red, 1, 4, 20, 0, conjunto()));
+
+        System.out.println("--- Caso 6: 1 a 7, usuario aislado (esperado: ninguna cadena) ---");
+        System.out.println(CadenasAlternativas.buscar(red, 1, 7, 100, 5, conjunto()));
+
+        System.out.println("--- Caso 7: origen excluido (esperado: aviso, no se busca) ---");
+        System.out.println(CadenasAlternativas.buscar(red, 1, 6, 15, 3, conjunto(1)));
+
+        System.out.println("--- Caso 8: origen igual al destino (esperado: cadena 1, 0 min) ---");
+        System.out.println(CadenasAlternativas.buscar(red, 1, 1, 15, 3, conjunto()));
+
+        /*
+         * Red donde el camino mas rapido tiene muchos intermediarios:
+         *   1 --1--> 2 --1--> 3 --1--> 4      y      1 --10--> 4 (directo)
+         * Dijkstra elige 1->2->3->4 (3 min, 2 intermediarios).
+         */
+        Grafo intermediarios = new Grafo();
+        intermediarios.agregarArista(1, 2, 1);
+        intermediarios.agregarArista(2, 3, 1);
+        intermediarios.agregarArista(3, 4, 1);
+        intermediarios.agregarArista(1, 4, 10);
+
+        System.out.println("--- Caso 9: 1 a 4 con hasta 1 intermediario ---");
+        System.out.println("    (Dijkstra da " + CadenaDifusion.calcular(intermediarios, 1, 4).getCadena()
+                + "; esperado en B3: solo 1->4, 10 min)");
+        System.out.println(CadenasAlternativas.buscar(intermediarios, 1, 4, 20, 1, conjunto()));
+
+        /*
+         * Red con ciclo 1 -> 2 -> 3 -> 1: sin el control de repetidos, la busqueda no terminaria.
+         *   1 --1--> 2 --1--> 3 --1--> 4,   3 --1--> 1,   2 --5--> 4
+         */
+        Grafo ciclo = new Grafo();
+        ciclo.agregarArista(1, 2, 1);
+        ciclo.agregarArista(2, 3, 1);
+        ciclo.agregarArista(3, 1, 1);
+        ciclo.agregarArista(3, 4, 1);
+        ciclo.agregarArista(2, 4, 5);
+
+        System.out.println("--- Caso 10: red con ciclo, 1 a 4 (esperado: 1->2->3->4 de 3 min y 1->2->4 de 6 min) ---");
+        System.out.println(CadenasAlternativas.buscar(ciclo, 1, 4, 20, 5, conjunto()));
+    }
+
+    private static Set<Integer> conjunto(int... usuarios) {
+        Set<Integer> s = new HashSet<>();
+        for (int u : usuarios) {
+            s.add(u);
+        }
+        return s;
     }
 
     private static void titulo(String texto) {

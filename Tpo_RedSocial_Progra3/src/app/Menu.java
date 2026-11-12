@@ -1,20 +1,24 @@
 package app;
 
 import algoritmos.CadenaDifusion;
+import algoritmos.CadenasAlternativas;
 import algoritmos.MochilaIniciativas;
 import estructuras.Grafo;
 import modelo.Iniciativa;
 import modelo.Publicacion;
+import modelo.ResultadoCadenas;
 import modelo.ResultadoDifusion;
 import servicios.Muro;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.TreeSet;
 
-/** Menu por consola para ejecutar las tres funcionalidades con datos de ejemplo o desde archivos. */
+/** Menu por consola para ejecutar las funcionalidades con datos de ejemplo o desde archivos. */
 public class Menu {
 
     private static final String RUTA_PUBLICACIONES = "datos/publicaciones.txt";
@@ -37,6 +41,7 @@ public class Menu {
                 System.out.println("2. Cadena de difusion mas rapida (Dijkstra)");
                 System.out.println("3. Seleccion de iniciativas a financiar (Mochila)");
                 System.out.println("4. Ejecutar casos de prueba predefinidos");
+                System.out.println("5. Cadenas alternativas de difusion (Backtracking)");
                 System.out.println("0. Salir");
                 opcion = leerEntero("Opcion: ");
 
@@ -45,6 +50,7 @@ public class Menu {
                     case 2: opcionDifusion(); break;
                     case 3: opcionIniciativas(); break;
                     case 4: CasosDePrueba.ejecutarTodos(); break;
+                    case 5: opcionCadenasAlternativas(); break;
                     case 0: System.out.println("Hasta luego."); break;
                     default: System.out.println("Opcion invalida.");
                 }
@@ -78,16 +84,9 @@ public class Menu {
     // ---------- Punto 2 ----------
 
     private void opcionDifusion() {
-        Grafo red;
-        if (usarArchivo()) {
-            try {
-                red = LectorArchivos.leerRed(leerRuta(RUTA_RED));
-            } catch (IOException | IllegalArgumentException e) {
-                System.out.println("No se pudo cargar el archivo: " + e.getMessage());
-                return;
-            }
-        } else {
-            red = CasosDePrueba.redEjemplo();
+        Grafo red = cargarRed();
+        if (red == null) {
+            return;
         }
 
         System.out.println("\nUsuarios de la red: " + new TreeSet<>(red.getVertices()));
@@ -104,6 +103,66 @@ public class Menu {
             }
             otra = confirmar("Otra consulta con la misma red? (s/n): ");
         } while (otra);
+    }
+
+    // Carga la red de ejemplo o desde archivo (la usan los puntos 2 y B3). Devuelve null si falla.
+    private Grafo cargarRed() {
+        if (usarArchivo()) {
+            try {
+                return LectorArchivos.leerRed(leerRuta(RUTA_RED));
+            } catch (IOException | IllegalArgumentException e) {
+                System.out.println("No se pudo cargar el archivo: " + e.getMessage());
+                return null;
+            }
+        }
+        return CasosDePrueba.redEjemplo();
+    }
+
+    // ---------- B3: cadenas alternativas ----------
+
+    private void opcionCadenasAlternativas() {
+        Grafo red = cargarRed();
+        if (red == null) {
+            return;
+        }
+
+        System.out.println("\nUsuarios de la red: " + new TreeSet<>(red.getVertices()));
+        boolean otra;
+        do {
+            int origen = leerEntero("Usuario origen: ");
+            int destino = leerEntero("Usuario destino: ");
+            int tiempoMaximo = leerEntero("Tiempo maximo (min): ");
+            int maxIntermediarios = leerEntero("Limite de intermediarios: ");
+            Set<Integer> excluidos = leerExcluidos();
+            try {
+                ResultadoCadenas resultado = CadenasAlternativas.buscar(
+                        red, origen, destino, tiempoMaximo, maxIntermediarios, excluidos);
+                System.out.println();
+                System.out.println(resultado);
+            } catch (IllegalArgumentException e) {
+                System.out.println("Error: " + e.getMessage());
+            }
+            otra = confirmar("Otra consulta con la misma red? (s/n): ");
+        } while (otra);
+    }
+
+    private Set<Integer> leerExcluidos() {
+        while (true) {
+            System.out.print("Usuarios excluidos separados por coma (Enter si ninguno): ");
+            String texto = entrada.nextLine().trim();
+            Set<Integer> excluidos = new HashSet<>();
+            if (texto.isEmpty()) {
+                return excluidos;
+            }
+            try {
+                for (String parte : texto.split(",")) {
+                    excluidos.add(Integer.parseInt(parte.trim()));
+                }
+                return excluidos;
+            } catch (NumberFormatException e) {
+                System.out.println("Ingresa numeros enteros separados por coma, por ejemplo: 3,5");
+            }
+        }
     }
 
     // ---------- Punto 3 ----------
