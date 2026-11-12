@@ -46,11 +46,10 @@ public class Menu {
                 System.out.println("1. Muro de publicaciones (Merge Sort)");
                 System.out.println("2. Cadena de difusion mas rapida (Dijkstra)");
                 System.out.println("3. Seleccion de iniciativas a financiar (Mochila)");
-                System.out.println("4. Seleccion de actividades compatibles (Programacion Dinamica)");
-                System.out.println("5. Ejecutar casos de prueba predefinidos");
                 System.out.println("4. Ejecutar casos de prueba predefinidos");
                 System.out.println("5. Cadenas alternativas de difusion (Backtracking)");
                 System.out.println("6. Formacion de equipos con restricciones (Backtracking)");
+                System.out.println("7. Seleccion de actividades compatibles (Programacion Dinamica)");
                 System.out.println("0. Salir");
                 opcion = leerEntero("Opcion: ");
 
@@ -58,11 +57,10 @@ public class Menu {
                     case 1: opcionMuro(); break;
                     case 2: opcionDifusion(); break;
                     case 3: opcionIniciativas(); break;
-                    case 4: opcionActividades(); break;
-                    case 5: CasosDePrueba.ejecutarTodos(); break;
                     case 4: CasosDePrueba.ejecutarTodos(); break;
                     case 5: opcionCadenasAlternativas(); break;
                     case 6: opcionEquipos(); break;
+                    case 7: opcionActividades(); break;
                     case 0: System.out.println("Hasta luego."); break;
                     default: System.out.println("Opcion invalida.");
                 }
@@ -235,6 +233,7 @@ public class Menu {
             System.out.println("(La tabla no se muestra porque hay mas de " + MAX_ACTIVIDADES_TABLA + " actividades)");
         }
         seleccion.mostrarResultado();
+    }
     // ---------- B1: formacion de equipos ----------
 
     private void opcionEquipos() {

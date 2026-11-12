@@ -93,6 +93,7 @@ public class CasosDePrueba {
 
     private static Actividad act(String id, int horaInicio, int horaFin, int interes) {
         return new Actividad(id, LocalTime.of(horaInicio, 0), LocalTime.of(horaFin, 0), interes);
+    }
     public static final int TAMANIO_EQUIPO_EJEMPLO = 3;
 
     public static List<Estudiante> estudiantesEjemplo() {
