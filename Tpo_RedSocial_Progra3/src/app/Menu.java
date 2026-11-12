@@ -2,8 +2,10 @@ package app;
 
 import algoritmos.CadenaDifusion;
 import algoritmos.CadenasAlternativas;
+import algoritmos.FormacionEquipos;
 import algoritmos.MochilaIniciativas;
 import estructuras.Grafo;
+import modelo.Estudiante;
 import modelo.Iniciativa;
 import modelo.Publicacion;
 import modelo.ResultadoCadenas;
@@ -42,6 +44,7 @@ public class Menu {
                 System.out.println("3. Seleccion de iniciativas a financiar (Mochila)");
                 System.out.println("4. Ejecutar casos de prueba predefinidos");
                 System.out.println("5. Cadenas alternativas de difusion (Backtracking)");
+                System.out.println("6. Formacion de equipos con restricciones (Backtracking)");
                 System.out.println("0. Salir");
                 opcion = leerEntero("Opcion: ");
 
@@ -51,6 +54,7 @@ public class Menu {
                     case 3: opcionIniciativas(); break;
                     case 4: CasosDePrueba.ejecutarTodos(); break;
                     case 5: opcionCadenasAlternativas(); break;
+                    case 6: opcionEquipos(); break;
                     case 0: System.out.println("Hasta luego."); break;
                     default: System.out.println("Opcion invalida.");
                 }
@@ -195,6 +199,27 @@ public class Menu {
             System.out.println("(La matriz no se muestra porque el presupuesto supera " + MAX_PRESUPUESTO_MATRIZ + ")");
         }
         mochila.mostrarResultado();
+    }
+
+    // ---------- B1: formacion de equipos ----------
+
+    private void opcionEquipos() {
+        System.out.println("\nEstudiantes de ejemplo:");
+        for (Estudiante e : CasosDePrueba.estudiantesEjemplo()) {
+            System.out.println("  - " + e);
+        }
+        System.out.println("Obligatorios: " + CasosDePrueba.obligatoriosEjemplo());
+        System.out.print("No pueden estar juntos:");
+        for (String[] par : CasosDePrueba.incompatiblesEjemplo()) {
+            System.out.print(" " + par[0] + "-" + par[1]);
+        }
+        System.out.println("\n");
+
+        FormacionEquipos equipos = new FormacionEquipos(CasosDePrueba.estudiantesEjemplo(),
+                CasosDePrueba.TAMANIO_EQUIPO_EJEMPLO, CasosDePrueba.habilidadesEjemplo(),
+                CasosDePrueba.obligatoriosEjemplo(), CasosDePrueba.incompatiblesEjemplo());
+        equipos.resolver();
+        equipos.mostrarResultado();
     }
 
     // ---------- Auxiliares ----------
