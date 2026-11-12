@@ -1,19 +1,25 @@
 package app;
 
 import algoritmos.CadenaDifusion;
+import algoritmos.CadenasAlternativas;
+import algoritmos.FormacionEquipos;
 import algoritmos.MochilaIniciativas;
 import algoritmos.SeleccionActividades;
 import estructuras.Grafo;
 import modelo.Actividad;
+import modelo.Estudiante;
 import modelo.Iniciativa;
 import modelo.Publicacion;
+import modelo.ResultadoCadenas;
 import modelo.ResultadoDifusion;
 import servicios.Muro;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.TreeSet;
 
 /** Menu por consola para ejecutar las funcionalidades con datos de ejemplo o desde archivos. */
@@ -42,6 +48,9 @@ public class Menu {
                 System.out.println("3. Seleccion de iniciativas a financiar (Mochila)");
                 System.out.println("4. Seleccion de actividades compatibles (Programacion Dinamica)");
                 System.out.println("5. Ejecutar casos de prueba predefinidos");
+                System.out.println("4. Ejecutar casos de prueba predefinidos");
+                System.out.println("5. Cadenas alternativas de difusion (Backtracking)");
+                System.out.println("6. Formacion de equipos con restricciones (Backtracking)");
                 System.out.println("0. Salir");
                 opcion = leerEntero("Opcion: ");
 
@@ -51,6 +60,9 @@ public class Menu {
                     case 3: opcionIniciativas(); break;
                     case 4: opcionActividades(); break;
                     case 5: CasosDePrueba.ejecutarTodos(); break;
+                    case 4: CasosDePrueba.ejecutarTodos(); break;
+                    case 5: opcionCadenasAlternativas(); break;
+                    case 6: opcionEquipos(); break;
                     case 0: System.out.println("Hasta luego."); break;
                     default: System.out.println("Opcion invalida.");
                 }
@@ -84,16 +96,9 @@ public class Menu {
     // ---------- Punto 2 ----------
 
     private void opcionDifusion() {
-        Grafo red;
-        if (usarArchivo()) {
-            try {
-                red = LectorArchivos.leerRed(leerRuta(RUTA_RED));
-            } catch (IOException | IllegalArgumentException e) {
-                System.out.println("No se pudo cargar el archivo: " + e.getMessage());
-                return;
-            }
-        } else {
-            red = CasosDePrueba.redEjemplo();
+        Grafo red = cargarRed();
+        if (red == null) {
+            return;
         }
 
         System.out.println("\nUsuarios de la red: " + new TreeSet<>(red.getVertices()));
@@ -110,6 +115,66 @@ public class Menu {
             }
             otra = confirmar("Otra consulta con la misma red? (s/n): ");
         } while (otra);
+    }
+
+    // Carga la red de ejemplo o desde archivo (la usan los puntos 2 y B3). Devuelve null si falla.
+    private Grafo cargarRed() {
+        if (usarArchivo()) {
+            try {
+                return LectorArchivos.leerRed(leerRuta(RUTA_RED));
+            } catch (IOException | IllegalArgumentException e) {
+                System.out.println("No se pudo cargar el archivo: " + e.getMessage());
+                return null;
+            }
+        }
+        return CasosDePrueba.redEjemplo();
+    }
+
+    // ---------- B3: cadenas alternativas ----------
+
+    private void opcionCadenasAlternativas() {
+        Grafo red = cargarRed();
+        if (red == null) {
+            return;
+        }
+
+        System.out.println("\nUsuarios de la red: " + new TreeSet<>(red.getVertices()));
+        boolean otra;
+        do {
+            int origen = leerEntero("Usuario origen: ");
+            int destino = leerEntero("Usuario destino: ");
+            int tiempoMaximo = leerEntero("Tiempo maximo (min): ");
+            int maxIntermediarios = leerEntero("Limite de intermediarios: ");
+            Set<Integer> excluidos = leerExcluidos();
+            try {
+                ResultadoCadenas resultado = CadenasAlternativas.buscar(
+                        red, origen, destino, tiempoMaximo, maxIntermediarios, excluidos);
+                System.out.println();
+                System.out.println(resultado);
+            } catch (IllegalArgumentException e) {
+                System.out.println("Error: " + e.getMessage());
+            }
+            otra = confirmar("Otra consulta con la misma red? (s/n): ");
+        } while (otra);
+    }
+
+    private Set<Integer> leerExcluidos() {
+        while (true) {
+            System.out.print("Usuarios excluidos separados por coma (Enter si ninguno): ");
+            String texto = entrada.nextLine().trim();
+            Set<Integer> excluidos = new HashSet<>();
+            if (texto.isEmpty()) {
+                return excluidos;
+            }
+            try {
+                for (String parte : texto.split(",")) {
+                    excluidos.add(Integer.parseInt(parte.trim()));
+                }
+                return excluidos;
+            } catch (NumberFormatException e) {
+                System.out.println("Ingresa numeros enteros separados por coma, por ejemplo: 3,5");
+            }
+        }
     }
 
     // ---------- Punto 3 ----------
@@ -170,6 +235,25 @@ public class Menu {
             System.out.println("(La tabla no se muestra porque hay mas de " + MAX_ACTIVIDADES_TABLA + " actividades)");
         }
         seleccion.mostrarResultado();
+    // ---------- B1: formacion de equipos ----------
+
+    private void opcionEquipos() {
+        System.out.println("\nEstudiantes de ejemplo:");
+        for (Estudiante e : CasosDePrueba.estudiantesEjemplo()) {
+            System.out.println("  - " + e);
+        }
+        System.out.println("Obligatorios: " + CasosDePrueba.obligatoriosEjemplo());
+        System.out.print("No pueden estar juntos:");
+        for (String[] par : CasosDePrueba.incompatiblesEjemplo()) {
+            System.out.print(" " + par[0] + "-" + par[1]);
+        }
+        System.out.println("\n");
+
+        FormacionEquipos equipos = new FormacionEquipos(CasosDePrueba.estudiantesEjemplo(),
+                CasosDePrueba.TAMANIO_EQUIPO_EJEMPLO, CasosDePrueba.habilidadesEjemplo(),
+                CasosDePrueba.obligatoriosEjemplo(), CasosDePrueba.incompatiblesEjemplo());
+        equipos.resolver();
+        equipos.mostrarResultado();
     }
 
     // ---------- Auxiliares ----------

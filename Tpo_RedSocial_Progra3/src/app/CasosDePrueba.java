@@ -1,10 +1,13 @@
 package app;
 
 import algoritmos.CadenaDifusion;
+import algoritmos.CadenasAlternativas;
+import algoritmos.FormacionEquipos;
 import algoritmos.MochilaIniciativas;
 import algoritmos.SeleccionActividades;
 import estructuras.Grafo;
 import modelo.Actividad;
+import modelo.Estudiante;
 import modelo.Iniciativa;
 import modelo.Publicacion;
 import servicios.Muro;
@@ -12,7 +15,10 @@ import servicios.Muro;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /** Datos de ejemplo y casos de prueba predefinidos de las funcionalidades. */
 public class CasosDePrueba {
@@ -87,6 +93,31 @@ public class CasosDePrueba {
 
     private static Actividad act(String id, int horaInicio, int horaFin, int interes) {
         return new Actividad(id, LocalTime.of(horaInicio, 0), LocalTime.of(horaFin, 0), interes);
+    public static final int TAMANIO_EQUIPO_EJEMPLO = 3;
+
+    public static List<Estudiante> estudiantesEjemplo() {
+        List<Estudiante> estudiantes = new ArrayList<>();
+        estudiantes.add(new Estudiante("Ana", Arrays.asList("Java", "SQL")));
+        estudiantes.add(new Estudiante("Beto", Arrays.asList("Diseno")));
+        estudiantes.add(new Estudiante("Caro", Arrays.asList("Java", "Testing")));
+        estudiantes.add(new Estudiante("Dani", Arrays.asList("SQL", "Diseno")));
+        estudiantes.add(new Estudiante("Eze", Arrays.asList("Testing")));
+        estudiantes.add(new Estudiante("Flor", Arrays.asList("Diseno", "Testing")));
+        return estudiantes;
+    }
+
+    public static List<String> habilidadesEjemplo() {
+        return Arrays.asList("Java", "SQL", "Diseno", "Testing");
+    }
+
+    public static List<String> obligatoriosEjemplo() {
+        return Arrays.asList("Ana");
+    }
+
+    public static List<String[]> incompatiblesEjemplo() {
+        List<String[]> pares = new ArrayList<>();
+        pares.add(new String[]{"Ana", "Flor"});
+        return pares;
     }
 
     // ---------- Casos de prueba ----------
@@ -96,6 +127,8 @@ public class CasosDePrueba {
         probarDifusion();
         probarMochila();
         probarActividades();
+        probarCadenasAlternativas();
+        probarEquipos();
     }
 
     public static void probarMuro() {
@@ -236,6 +269,117 @@ public class CasosDePrueba {
         MochilaIniciativas mochila = new MochilaIniciativas(lista, presupuesto);
         mochila.resolver();
         mochila.mostrarResultado();
+    }
+    public static void probarCadenasAlternativas() {
+        titulo("B3 - Cadenas alternativas de difusion (Backtracking)");
+        Grafo red = redEjemplo();
+
+        System.out.println("\n--- Caso 1: 1 a 6, max 15 min, hasta 3 intermediarios, sin excluidos ---");
+        System.out.println("    (esperado: 3 cadenas; mejores empatadas 1->2->5->6 y 1->3->4->6, 10 min)");
+        System.out.println(CadenasAlternativas.buscar(red, 1, 6, 15, 3, conjunto()));
+
+        System.out.println("--- Caso 2: igual que el caso 1, excluyendo al usuario 3 ---");
+        System.out.println("    (esperado: 2 cadenas; mejor 1->2->5->6, 10 min)");
+        System.out.println(CadenasAlternativas.buscar(red, 1, 6, 15, 3, conjunto(3)));
+
+        System.out.println("--- Caso 3: tiempo maximo exacto de 10 min (el limite es inclusivo) ---");
+        System.out.println("    (esperado: 2 cadenas de 10 min; se descarta la de 12)");
+        System.out.println(CadenasAlternativas.buscar(red, 1, 6, 10, 3, conjunto()));
+
+        System.out.println("--- Caso 4: tiempo maximo de 9 min (esperado: ninguna cadena) ---");
+        System.out.println(CadenasAlternativas.buscar(red, 1, 6, 9, 3, conjunto()));
+
+        System.out.println("--- Caso 5: 1 a 4 con 0 intermediarios (esperado: ninguna, no hay vinculo directo) ---");
+        System.out.println(CadenasAlternativas.buscar(red, 1, 4, 20, 0, conjunto()));
+
+        System.out.println("--- Caso 6: 1 a 7, usuario aislado (esperado: ninguna cadena) ---");
+        System.out.println(CadenasAlternativas.buscar(red, 1, 7, 100, 5, conjunto()));
+
+        System.out.println("--- Caso 7: origen excluido (esperado: aviso, no se busca) ---");
+        System.out.println(CadenasAlternativas.buscar(red, 1, 6, 15, 3, conjunto(1)));
+
+        System.out.println("--- Caso 8: origen igual al destino (esperado: cadena 1, 0 min) ---");
+        System.out.println(CadenasAlternativas.buscar(red, 1, 1, 15, 3, conjunto()));
+
+        /*
+         * Red donde el camino mas rapido tiene muchos intermediarios:
+         *   1 --1--> 2 --1--> 3 --1--> 4      y      1 --10--> 4 (directo)
+         * Dijkstra elige 1->2->3->4 (3 min, 2 intermediarios).
+         */
+        Grafo intermediarios = new Grafo();
+        intermediarios.agregarArista(1, 2, 1);
+        intermediarios.agregarArista(2, 3, 1);
+        intermediarios.agregarArista(3, 4, 1);
+        intermediarios.agregarArista(1, 4, 10);
+
+        System.out.println("--- Caso 9: 1 a 4 con hasta 1 intermediario ---");
+        System.out.println("    (Dijkstra da " + CadenaDifusion.calcular(intermediarios, 1, 4).getCadena()
+                + "; esperado en B3: solo 1->4, 10 min)");
+        System.out.println(CadenasAlternativas.buscar(intermediarios, 1, 4, 20, 1, conjunto()));
+
+        /*
+         * Red con ciclo 1 -> 2 -> 3 -> 1: sin el control de repetidos, la busqueda no terminaria.
+         *   1 --1--> 2 --1--> 3 --1--> 4,   3 --1--> 1,   2 --5--> 4
+         */
+        Grafo ciclo = new Grafo();
+        ciclo.agregarArista(1, 2, 1);
+        ciclo.agregarArista(2, 3, 1);
+        ciclo.agregarArista(3, 1, 1);
+        ciclo.agregarArista(3, 4, 1);
+        ciclo.agregarArista(2, 4, 5);
+
+        System.out.println("--- Caso 10: red con ciclo, 1 a 4 (esperado: 1->2->3->4 de 3 min y 1->2->4 de 6 min) ---");
+        System.out.println(CadenasAlternativas.buscar(ciclo, 1, 4, 20, 5, conjunto()));
+    }
+
+    private static Set<Integer> conjunto(int... usuarios) {
+        Set<Integer> s = new HashSet<>();
+        for (int u : usuarios) {
+            s.add(u);
+        }
+        return s;
+    }
+
+    public static void probarEquipos() {
+        titulo("B1 - Formacion de equipos con restricciones (Backtracking)");
+
+        // Ana es obligatoria y aporta Java y SQL; faltan Diseno y Testing. Flor no puede estar con Ana.
+        System.out.println("\n--- Ejemplo (esperado: 4 equipos: Ana-Beto-Caro, Ana-Beto-Eze, Ana-Caro-Dani, Ana-Dani-Eze) ---");
+        FormacionEquipos equipos = new FormacionEquipos(estudiantesEjemplo(), TAMANIO_EQUIPO_EJEMPLO,
+                habilidadesEjemplo(), obligatoriosEjemplo(), incompatiblesEjemplo());
+        equipos.resolver();
+        equipos.mostrarResultado();
+
+        // Sin la incompatibilidad, Flor puede entrar con Ana: aparecen 4 equipos mas
+        probarEquipo("Sin pares incompatibles (esperado: 8 equipos, se suman los 4 con Flor)",
+                estudiantesEjemplo(), 3, habilidadesEjemplo(), obligatoriosEjemplo(), new ArrayList<>());
+
+        // Sin requisitos: todas las combinaciones de 4 tomadas de a 2 = 6, ninguna repetida
+        List<Estudiante> cuatro = new ArrayList<>(estudiantesEjemplo().subList(0, 4));
+        probarEquipo("Sin repetidos: 4 estudiantes, equipos de 2, sin requisitos (esperado: 6 equipos)",
+                cuatro, 2, new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+
+        probarEquipo("Habilidad que nadie tiene (esperado: ningun equipo)",
+                estudiantesEjemplo(), 3, Arrays.asList("Java", "Python"), new ArrayList<>(), new ArrayList<>());
+
+        List<String[]> obligatoriosPeleados = new ArrayList<>();
+        obligatoriosPeleados.add(new String[]{"Ana", "Beto"});
+        probarEquipo("Dos obligatorios incompatibles entre si (esperado: ningun equipo)",
+                estudiantesEjemplo(), 3, habilidadesEjemplo(), Arrays.asList("Ana", "Beto"), obligatoriosPeleados);
+
+        probarEquipo("Equipo mas grande que la cantidad de estudiantes (esperado: ningun equipo)",
+                cuatro, 5, new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+
+        probarEquipo("Sin estudiantes (esperado: ningun equipo)",
+                new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+    }
+
+    private static void probarEquipo(String titulo, List<Estudiante> estudiantes, int tamanio,
+                                     List<String> habilidades, List<String> obligatorios, List<String[]> incompatibles) {
+        System.out.println("\n--- " + titulo + " ---");
+        FormacionEquipos equipos = new FormacionEquipos(estudiantes, tamanio, habilidades, obligatorios, incompatibles);
+        equipos.resolver();
+        equipos.mostrarResultado();
     }
 
     private static void titulo(String texto) {
