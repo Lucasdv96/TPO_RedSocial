@@ -1,0 +1,16 @@
+# Cada linea empieza con su tipo, campos separados por ';' y listas por ','
+# Tamanio del equipo (obligatorio)
+tamanio;3
+# Habilidades que el equipo tiene que cubrir
+requeridas;Java,SQL,Diseno,Testing
+# Estudiantes: estudiante;nombre;habilidad1,habilidad2
+estudiante;Ana;Java,SQL
+estudiante;Beto;Diseno
+estudiante;Caro;Java,Testing
+estudiante;Dani;SQL,Diseno
+estudiante;Eze;Testing
+estudiante;Flor;Diseno,Testing
+# Integrantes que tienen que estar en todos los equipos
+obligatorios;Ana
+# Pares que no pueden integrar el mismo equipo: nombre1-nombre2
+incompatibles;Ana-Flor

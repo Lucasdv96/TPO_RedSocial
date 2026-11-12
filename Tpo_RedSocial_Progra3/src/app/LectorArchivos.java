@@ -5,6 +5,7 @@ import modelo.Actividad;
 import modelo.Iniciativa;
 import modelo.Publicacion;
 import servicios.Muro;
+import modelo.Estudiante;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -160,6 +161,151 @@ public class LectorArchivos {
             }
         }
         return actividades;
+    }
+
+    // ---------- B1: equipos ----------
+    // Cada linea empieza con su tipo:
+    //   tamanio;N                                   (obligatoria, una sola vez)
+    //   requeridas;habilidad1,habilidad2            (opcional, una sola vez)
+    //   estudiante;nombre;habilidad1,habilidad2     (una por estudiante)
+    //   obligatorios;nombre1,nombre2                (opcional)
+    //   incompatibles;nombre1-nombre2,nombre3-nombre4 (opcional)
+
+    /** Resultado de leer un archivo de equipos. */
+    public static class DatosEquipos {
+        private final List<Estudiante> estudiantes;
+        private final int tamanio;
+        private final List<String> habilidadesRequeridas;
+        private final List<String> obligatorios;
+        private final List<String[]> incompatibles;
+
+        public DatosEquipos(List<Estudiante> estudiantes, int tamanio, List<String> habilidadesRequeridas,
+                            List<String> obligatorios, List<String[]> incompatibles) {
+            this.estudiantes = estudiantes;
+            this.tamanio = tamanio;
+            this.habilidadesRequeridas = habilidadesRequeridas;
+            this.obligatorios = obligatorios;
+            this.incompatibles = incompatibles;
+        }
+
+        public List<Estudiante> getEstudiantes() { return estudiantes; }
+        public int getTamanio() { return tamanio; }
+        public List<String> getHabilidadesRequeridas() { return habilidadesRequeridas; }
+        public List<String> getObligatorios() { return obligatorios; }
+        public List<String[]> getIncompatibles() { return incompatibles; }
+    }
+
+    public static DatosEquipos leerEquipos(String ruta) throws IOException {
+        List<Estudiante> estudiantes = new ArrayList<>();
+        Set<String> nombres = new HashSet<>();
+        Integer tamanio = null;
+        boolean hayRequeridas = false;
+        List<String> requeridas = new ArrayList<>();
+        List<String> obligatorios = new ArrayList<>();
+        List<String[]> incompatibles = new ArrayList<>();
+        // Las lineas que nombran estudiantes se validan al final,
+        // asi los estudiantes pueden aparecer en cualquier parte del archivo
+        List<Linea> conReferencias = new ArrayList<>();
+
+        for (Linea l : leerLineas(ruta)) {
+            try {
+                switch (l.campos[0].toLowerCase()) {
+                    case "tamanio":
+                        exigirCampos(l, 2, "tamanio;N");
+                        if (tamanio != null) {
+                            throw new IllegalArgumentException("el tamanio esta definido mas de una vez");
+                        }
+                        tamanio = entero(l, 1, "tamanio");
+                        if (tamanio <= 0) {
+                            throw new IllegalArgumentException("el tamanio debe ser positivo");
+                        }
+                        break;
+                    case "requeridas":
+                        exigirCampos(l, 2, "requeridas;habilidad1,habilidad2");
+                        if (hayRequeridas) {
+                            throw new IllegalArgumentException("las habilidades requeridas estan definidas mas de una vez");
+                        }
+                        hayRequeridas = true;
+                        requeridas.addAll(separarPorComa(l.campos[1]));
+                        break;
+                    case "estudiante":
+                        exigirCampos(l, 3, "estudiante;nombre;habilidad1,habilidad2");
+                        String nombre = l.campos[1];
+                        if (nombre.isEmpty()) {
+                            throw new IllegalArgumentException("el nombre del estudiante no puede estar vacio");
+                        }
+                        if (!nombres.add(nombre)) {
+                            throw new IllegalArgumentException("el estudiante " + nombre + " esta repetido");
+                        }
+                        estudiantes.add(new Estudiante(nombre, separarPorComa(l.campos[2])));
+                        break;
+                    case "obligatorios":
+                        exigirCampos(l, 2, "obligatorios;nombre1,nombre2");
+                        conReferencias.add(l);
+                        break;
+                    case "incompatibles":
+                        exigirCampos(l, 2, "incompatibles;nombre1-nombre2");
+                        conReferencias.add(l);
+                        break;
+                    default:
+                        throw new IllegalArgumentException("tipo de linea desconocido '" + l.campos[0]
+                                + "' (se espera tamanio, requeridas, estudiante, obligatorios o incompatibles)");
+                }
+            } catch (IllegalArgumentException e) {
+                throw errorEnLinea(l, e);
+            }
+        }
+        if (tamanio == null) {
+            throw new IllegalArgumentException("falta la linea tamanio;N");
+        }
+
+        for (Linea l : conReferencias) {
+            try {
+                if (l.campos[0].equalsIgnoreCase("obligatorios")) {
+                    for (String nombre : separarPorComa(l.campos[1])) {
+                        exigirEstudiante(nombres, nombre);
+                        if (!obligatorios.contains(nombre)) {
+                            obligatorios.add(nombre);
+                        }
+                    }
+                } else {
+                    for (String par : separarPorComa(l.campos[1])) {
+                        String[] partes = par.split("-", -1);
+                        if (partes.length != 2) {
+                            throw new IllegalArgumentException("'" + par + "' no es un par valido (formato nombre1-nombre2)");
+                        }
+                        String a = partes[0].trim();
+                        String b = partes[1].trim();
+                        exigirEstudiante(nombres, a);
+                        exigirEstudiante(nombres, b);
+                        if (a.equals(b)) {
+                            throw new IllegalArgumentException("un estudiante no puede ser incompatible consigo mismo: " + a);
+                        }
+                        incompatibles.add(new String[]{a, b});
+                    }
+                }
+            } catch (IllegalArgumentException e) {
+                throw errorEnLinea(l, e);
+            }
+        }
+        return new DatosEquipos(estudiantes, tamanio, requeridas, obligatorios, incompatibles);
+    }
+
+    private static List<String> separarPorComa(String texto) {
+        List<String> valores = new ArrayList<>();
+        for (String parte : texto.split(",")) {
+            String valor = parte.trim();
+            if (!valor.isEmpty()) {
+                valores.add(valor);
+            }
+        }
+        return valores;
+    }
+
+    private static void exigirEstudiante(Set<String> nombres, String nombre) {
+        if (!nombres.contains(nombre)) {
+            throw new IllegalArgumentException("el estudiante '" + nombre + "' no esta definido en el archivo");
+        }
     }
 
     // ---------- Auxiliares ----------

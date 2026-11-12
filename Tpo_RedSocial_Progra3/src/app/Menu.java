@@ -29,6 +29,8 @@ public class Menu {
     private static final String RUTA_RED = "datos/red.txt";
     private static final String RUTA_INICIATIVAS = "datos/iniciativas.txt";
     private static final String RUTA_ACTIVIDADES = "datos/actividades.txt";
+    private static final String RUTA_EQUIPOS = "datos/equipos.txt";
+    private static final int MAX_ESTUDIANTES_SIN_AVISO = 20;
     private static final int MAX_ACTIVIDADES_TABLA = 30;
     private static final int MAX_PRESUPUESTO_MATRIZ = 20;
 
@@ -237,20 +239,52 @@ public class Menu {
     // ---------- B1: formacion de equipos ----------
 
     private void opcionEquipos() {
-        System.out.println("\nEstudiantes de ejemplo:");
-        for (Estudiante e : CasosDePrueba.estudiantesEjemplo()) {
+        List<Estudiante> estudiantes;
+        int tamanio;
+        List<String> habilidades;
+        List<String> obligatorios;
+        List<String[]> incompatibles;
+        if (usarArchivo()) {
+            try {
+                LectorArchivos.DatosEquipos datos = LectorArchivos.leerEquipos(leerRuta(RUTA_EQUIPOS));
+                estudiantes = datos.getEstudiantes();
+                tamanio = datos.getTamanio();
+                habilidades = datos.getHabilidadesRequeridas();
+                obligatorios = datos.getObligatorios();
+                incompatibles = datos.getIncompatibles();
+            } catch (IOException | IllegalArgumentException e) {
+                System.out.println("No se pudo cargar el archivo: " + e.getMessage());
+                return;
+            }
+        } else {
+            estudiantes = CasosDePrueba.estudiantesEjemplo();
+            tamanio = CasosDePrueba.TAMANIO_EQUIPO_EJEMPLO;
+            habilidades = CasosDePrueba.habilidadesEjemplo();
+            obligatorios = CasosDePrueba.obligatoriosEjemplo();
+            incompatibles = CasosDePrueba.incompatiblesEjemplo();
+        }
+
+        System.out.println("\nEstudiantes:");
+        for (Estudiante e : estudiantes) {
             System.out.println("  - " + e);
         }
-        System.out.println("Obligatorios: " + CasosDePrueba.obligatoriosEjemplo());
+        System.out.println("Obligatorios: " + (obligatorios.isEmpty() ? "ninguno" : obligatorios));
         System.out.print("No pueden estar juntos:");
-        for (String[] par : CasosDePrueba.incompatiblesEjemplo()) {
+        if (incompatibles.isEmpty()) {
+            System.out.print(" ninguno");
+        }
+        for (String[] par : incompatibles) {
             System.out.print(" " + par[0] + "-" + par[1]);
         }
         System.out.println("\n");
 
-        FormacionEquipos equipos = new FormacionEquipos(CasosDePrueba.estudiantesEjemplo(),
-                CasosDePrueba.TAMANIO_EQUIPO_EJEMPLO, CasosDePrueba.habilidadesEjemplo(),
-                CasosDePrueba.obligatoriosEjemplo(), CasosDePrueba.incompatiblesEjemplo());
+        // El backtracking explora hasta 2^n estados: con muchos estudiantes puede tardar
+        if (estudiantes.size() > MAX_ESTUDIANTES_SIN_AVISO
+                && !confirmar("Hay " + estudiantes.size() + " estudiantes y la busqueda puede tardar. Continuar? (s/n): ")) {
+            return;
+        }
+
+        FormacionEquipos equipos = new FormacionEquipos(estudiantes, tamanio, habilidades, obligatorios, incompatibles);
         equipos.resolver();
         equipos.mostrarResultado();
     }
