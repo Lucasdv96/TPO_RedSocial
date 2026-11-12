@@ -2,7 +2,9 @@ package app;
 
 import algoritmos.CadenaDifusion;
 import algoritmos.MochilaIniciativas;
+import algoritmos.SeleccionActividades;
 import estructuras.Grafo;
+import modelo.Actividad;
 import modelo.Iniciativa;
 import modelo.Publicacion;
 import modelo.ResultadoDifusion;
@@ -14,12 +16,14 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.TreeSet;
 
-/** Menu por consola para ejecutar las tres funcionalidades con datos de ejemplo o desde archivos. */
+/** Menu por consola para ejecutar las funcionalidades con datos de ejemplo o desde archivos. */
 public class Menu {
 
     private static final String RUTA_PUBLICACIONES = "datos/publicaciones.txt";
     private static final String RUTA_RED = "datos/red.txt";
     private static final String RUTA_INICIATIVAS = "datos/iniciativas.txt";
+    private static final String RUTA_ACTIVIDADES = "datos/actividades.txt";
+    private static final int MAX_ACTIVIDADES_TABLA = 30;
     private static final int MAX_PRESUPUESTO_MATRIZ = 20;
 
     private final Scanner entrada;
@@ -36,7 +40,8 @@ public class Menu {
                 System.out.println("1. Muro de publicaciones (Merge Sort)");
                 System.out.println("2. Cadena de difusion mas rapida (Dijkstra)");
                 System.out.println("3. Seleccion de iniciativas a financiar (Mochila)");
-                System.out.println("4. Ejecutar casos de prueba predefinidos");
+                System.out.println("4. Seleccion de actividades compatibles (Programacion Dinamica)");
+                System.out.println("5. Ejecutar casos de prueba predefinidos");
                 System.out.println("0. Salir");
                 opcion = leerEntero("Opcion: ");
 
@@ -44,7 +49,8 @@ public class Menu {
                     case 1: opcionMuro(); break;
                     case 2: opcionDifusion(); break;
                     case 3: opcionIniciativas(); break;
-                    case 4: CasosDePrueba.ejecutarTodos(); break;
+                    case 4: opcionActividades(); break;
+                    case 5: CasosDePrueba.ejecutarTodos(); break;
                     case 0: System.out.println("Hasta luego."); break;
                     default: System.out.println("Opcion invalida.");
                 }
@@ -136,6 +142,34 @@ public class Menu {
             System.out.println("(La matriz no se muestra porque el presupuesto supera " + MAX_PRESUPUESTO_MATRIZ + ")");
         }
         mochila.mostrarResultado();
+    }
+
+    // ---------- A3: actividades compatibles ----------
+
+    private void opcionActividades() {
+        List<Actividad> actividades;
+        if (usarArchivo()) {
+            try {
+                actividades = LectorArchivos.leerActividades(leerRuta(RUTA_ACTIVIDADES));
+            } catch (IOException | IllegalArgumentException e) {
+                System.out.println("No se pudo cargar el archivo: " + e.getMessage());
+                return;
+            }
+        } else {
+            actividades = CasosDePrueba.actividadesEjemplo();
+        }
+
+        SeleccionActividades seleccion = new SeleccionActividades(actividades);
+        seleccion.resolver();
+        System.out.println();
+        if (actividades.size() <= MAX_ACTIVIDADES_TABLA) {
+            System.out.println("Tabla de programacion dinamica (ordenada por hora de fin):");
+            seleccion.mostrarTabla();
+            System.out.println();
+        } else {
+            System.out.println("(La tabla no se muestra porque hay mas de " + MAX_ACTIVIDADES_TABLA + " actividades)");
+        }
+        seleccion.mostrarResultado();
     }
 
     // ---------- Auxiliares ----------

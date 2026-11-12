@@ -1,6 +1,7 @@
 package app;
 
 import estructuras.Grafo;
+import modelo.Actividad;
 import modelo.Iniciativa;
 import modelo.Publicacion;
 import servicios.Muro;
@@ -11,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -135,6 +137,31 @@ public class LectorArchivos {
         return new DatosMochila(iniciativas, presupuesto);
     }
 
+    // ---------- A3: actividades ----------
+    // Formato: id;horaInicio;horaFin;interes
+    // Ejemplo: Taller;09:00;11:30;8
+
+    public static List<Actividad> leerActividades(String ruta) throws IOException {
+        List<Actividad> actividades = new ArrayList<>();
+        Set<String> ids = new HashSet<>();
+        for (Linea l : leerLineas(ruta)) {
+            try {
+                exigirCampos(l, 4, "id;horaInicio;horaFin;interes");
+                String id = l.campos[0];
+                if (id.isEmpty()) {
+                    throw new IllegalArgumentException("el id no puede estar vacio");
+                }
+                if (!ids.add(id)) {
+                    throw new IllegalArgumentException("el id " + id + " esta repetido");
+                }
+                actividades.add(new Actividad(id, hora(l, 1), hora(l, 2), entero(l, 3, "interes")));
+            } catch (IllegalArgumentException e) {
+                throw errorEnLinea(l, e);
+            }
+        }
+        return actividades;
+    }
+
     // ---------- Auxiliares ----------
 
     private static List<Linea> leerLineas(String ruta) throws IOException {
@@ -184,6 +211,15 @@ public class LectorArchivos {
         } catch (DateTimeParseException e) {
             throw new IllegalArgumentException("'" + l.campos[posicion]
                     + "' no es una fecha valida (formato aaaa-MM-ddTHH:mm, por ejemplo 2026-10-20T13:00)");
+        }
+    }
+
+    private static LocalTime hora(Linea l, int posicion) {
+        try {
+            return LocalTime.parse(l.campos[posicion]);
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("'" + l.campos[posicion]
+                    + "' no es una hora valida (formato HH:mm, por ejemplo 09:30)");
         }
     }
 
