@@ -5,29 +5,7 @@ import modelo.Estudiante;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * B1 - Formacion de equipos con restricciones.
- *
- * ESTRATEGIA: Backtracking (igual que "Suma de Subconjuntos", clase 16/10).
- *
- * Para cada estudiante (etapa) se decide:  0 = no entra al equipo,  1 = entra.
- * La solucion es un vector ActSolucion de 0 y 1, uno por estudiante.
- *
- * Como cada estudiante se decide una sola vez y siempre en el mismo orden,
- * cada equipo se genera una unica vez: nunca aparece {Ana, Beto} y {Beto, Ana}.
- *
- * Restricciones:
- *   - Explicitas: ActSolucion[etapa] pertenece a {0, 1}.
- *   - Implicitas: el equipo tiene exactamente "tamanio" integrantes, cubre todas
- *     las habilidades requeridas, incluye a los obligatorios y no junta
- *     a dos estudiantes incompatibles.
- *
- * Podas (funcion factible): se corta la rama apenas no puede llegar a una solucion.
- *
- * Complejidad temporal: a = 2, b = 1, k = 0  ->  O(2^n)
- *   (n = cantidad de estudiantes; cada nodo ademas revisa incompatibilidades en O(n),
- *    por lo que el total es O(2^n * n). Las podas achican mucho el caso real.)
- */
+
 public class FormacionEquipos {
 
     private final List<Estudiante> v;              // vector de estudiantes
@@ -64,9 +42,7 @@ public class FormacionEquipos {
         }
     }
 
-    /**
-     * Busca todos los equipos validos.
-     */
+
     public void resolver() {
         equiposValidos.clear();
         estadosExplorados = 0;
@@ -77,52 +53,36 @@ public class FormacionEquipos {
         formarEquipos(actSolucion, 0, 0);
     }
 
-    /**
-     * ALGORITMO formarEquipos (basado en el algoritmo sumaM de la clase)
-     *
-     * Entrada: ActSolucion: Vector<entero>, ActCantidad: entero, etapa: entero
-     */
+
     private void formarEquipos(int[] actSolucion, int actCantidad, int etapa) {
         // para i = 0 hasta 1
         for (int i = 0; i <= 1; i++) {
             estadosExplorados++;
 
-            // ActSolucion[etapa] <- i
             actSolucion[etapa] = i;
-            // ActCantidad <- ActCantidad + i
             int nuevaCantidad = actCantidad + i;
 
-            // si factible (si no, se poda la rama)
             if (factible(actSolucion, nuevaCantidad, etapa)) {
-                // si etapa = tamanio(v) - 1   (ya se decidio por todos los estudiantes)
                 if (etapa == v.size() - 1) {
-                    // si es solucion -> mostrar / guardar
                     if (esSolucion(actSolucion, nuevaCantidad)) {
                         guardarEquipo(actSolucion);
-                    } // fin si
+                    }
                 } else {
                     formarEquipos(actSolucion, nuevaCantidad, etapa + 1);
-                } // fin si
-            } // fin si
-        } // fin para
-
-        // eliminar(S, E): se deja la etapa sin decidir antes de volver atras
+                }
+            }
+        }
         actSolucion[etapa] = 0;
     }
 
-    /**
-     * Funcion FACTIBLE: devuelve falso (poda) si la solucion parcial ya no puede ser valida.
-     */
     private boolean factible(int[] actSolucion, int cantidad, int etapa) {
-        // Poda 1: un obligatorio no puede quedar afuera
+
         if (actSolucion[etapa] == 0 && obligatorio[etapa]) {
             return false;
         }
-        // Poda 2: el equipo no puede pasarse del tamanio
         if (cantidad > tamanio) {
             return false;
         }
-        // Poda 3: el que entra no puede ser incompatible con alguien que ya esta
         if (actSolucion[etapa] == 1) {
             for (int j = 0; j < etapa; j++) {
                 if (actSolucion[j] == 1 && incompatible[etapa][j]) {
@@ -130,7 +90,6 @@ public class FormacionEquipos {
                 }
             }
         }
-        // Poda 4: tienen que quedar suficientes estudiantes para completar el equipo
         int quedan = v.size() - 1 - etapa;
         if (cantidad + quedan < tamanio) {
             return false;
@@ -138,9 +97,6 @@ public class FormacionEquipos {
         return true;
     }
 
-    /**
-     * Funcion SOLUCION: el equipo tiene el tamanio pedido y cubre todas las habilidades.
-     */
     private boolean esSolucion(int[] actSolucion, int cantidad) {
         if (cantidad != tamanio) {
             return false;
