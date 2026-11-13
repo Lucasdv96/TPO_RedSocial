@@ -35,7 +35,7 @@ public class ResultadoDifusion {
         } else {
             sb.append("El destino NO es alcanzable desde el origen.");
         }
-        sb.append("\n--- Decisiones del cálculo ---\n");
+        sb.append("\n--- Decisiones del calculo ---\n");
         for (String p : pasos) sb.append("  ").append(p).append("\n");
         return sb.toString();
     }

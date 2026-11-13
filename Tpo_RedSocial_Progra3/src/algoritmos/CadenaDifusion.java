@@ -34,15 +34,15 @@ public class CadenaDifusion {
         while (!pendientes.isEmpty()) {
             int w = seleccionarMinimo(pendientes, dist);
             if (w == -1 || dist.get(w) == INF) {
-                pasos.add("No quedan usuarios alcanzables. Fin del cálculo.");
+                pasos.add("No quedan usuarios alcanzables. Fin del calculo.");
                 break;
             }
             pendientes.remove(w);
             visitados.add(w);
-            pasos.add("Se fija el usuario " + w + " con tiempo mínimo " + dist.get(w) + " min");
+            pasos.add("Se fija el usuario " + w + " con tiempo minimo " + dist.get(w) + " min");
 
             if (w == destino) {
-                pasos.add("Se alcanzó el destino " + destino + ". Su tiempo ya es definitivo.");
+                pasos.add("Se alcanzo el destino " + destino + ". Su tiempo ya es definitivo.");
                 break;
             }
 
@@ -52,7 +52,7 @@ public class CadenaDifusion {
                 if (visitados.contains(p)) continue;
                 int nuevo = dist.get(w) + e.getValue();
                 if (nuevo < dist.get(p)) {
-                    String antes = dist.get(p) == INF ? "∞" : String.valueOf(dist.get(p));
+                    String antes = dist.get(p) == INF ? "inf" : String.valueOf(dist.get(p));
                     dist.put(p, nuevo);
                     pred.put(p, w);
                     pasos.add("  Mejora para " + p + ": " + antes + " -> " + nuevo

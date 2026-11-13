@@ -5,29 +5,7 @@ import modelo.Estudiante;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * B1 - Formacion de equipos con restricciones.
- *
- * ESTRATEGIA: Backtracking (igual que "Suma de Subconjuntos", clase 16/10).
- *
- * Para cada estudiante (etapa) se decide:  0 = no entra al equipo,  1 = entra.
- * La solucion es un vector ActSolucion de 0 y 1, uno por estudiante.
- *
- * Como cada estudiante se decide una sola vez y siempre en el mismo orden,
- * cada equipo se genera una unica vez: nunca aparece {Ana, Beto} y {Beto, Ana}.
- *
- * Restricciones:
- *   - Explicitas: ActSolucion[etapa] pertenece a {0, 1}.
- *   - Implicitas: el equipo tiene exactamente "tamanio" integrantes, cubre todas
- *     las habilidades requeridas, incluye a los obligatorios y no junta
- *     a dos estudiantes incompatibles.
- *
- * Podas (funcion factible): se corta la rama apenas no puede llegar a una solucion.
- *
- * Complejidad temporal: a = 2, b = 1, k = 0  ->  O(2^n)
- *   (n = cantidad de estudiantes; cada nodo ademas revisa incompatibilidades en O(n),
- *    por lo que el total es O(2^n * n). Las podas achican mucho el caso real.)
- */
+
 public class FormacionEquipos {
 
     private final List<Estudiante> v;              // vector de estudiantes

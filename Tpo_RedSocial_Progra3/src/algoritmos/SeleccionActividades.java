@@ -49,7 +49,7 @@ public class SeleccionActividades {
 
     private void calcularPrevias() {
         /*
-        Calula, para cada actividad i (de 1 a n), cuantas actividades anteriores
+        Calcula, para cada actividad i (de 1 a n), cuantas actividades anteriores
         terminan a la hora de inicio de i o antes, y lo guarda en previa[i].
 
         Pre: actividadesOrdenadas ya esta ordenada por hora de fin.

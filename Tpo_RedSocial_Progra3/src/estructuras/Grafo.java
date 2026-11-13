@@ -13,7 +13,7 @@ public class Grafo {
 
     public void agregarArista(int origen, int destino, int peso) {
         if (peso <= 0) {
-            throw new IllegalArgumentException("El tiempo del vínculo debe ser positivo: " + peso);
+            throw new IllegalArgumentException("El tiempo del vinculo debe ser positivo: " + peso);
         }
         agregarVertice(origen);
         agregarVertice(destino);
